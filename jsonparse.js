@@ -51,9 +51,10 @@ var TAB =             "\t".charCodeAt(0);
 
 var STRING_BUFFER_SIZE = 64 * 1024;
 
-function Parser() {
+function Parser(options = {}) {
   this.tState = START;
   this.value = undefined;
+  this.parseNumbersAsStrings = options.parseNumbersAsStrings
 
   this.string = undefined; // string data
   this.stringBuffer = Buffer.alloc ? Buffer.alloc(STRING_BUFFER_SIZE) : new Buffer(STRING_BUFFER_SIZE);
@@ -267,11 +268,15 @@ proto.write = function (buffer) {
               return this.charError(buffer, i);
             }
 
-            if ((this.string.match(/[0-9]+/) == this.string) && (result.toString() != this.string)) {
-              // Long string of digits which is an ID string and not valid and/or safe JavaScript integer Number
-              this.onToken(STRING, this.string);
+            if (this.parseNumbersAsStrings) {
+              this.onToken(STRING, this.string)
             } else {
-              this.onToken(NUMBER, result);
+              if (result > Number.MAX_SAFE_INTEGER || result < Number.MIN_SAFE_INTEGER || !isFinite(result)) {
+                // Long string of digits which is an ID string and not valid and/or safe JavaScript integer Number
+                this.onError(new Error( `${this.string} is unsafe to parse as a number because it is either too large, too small, or not finite. Please pass the {parseNumbersAsStrings: true} option`));
+              } else {
+                this.onToken(NUMBER, result);
+              }
             }
 
             this.offset += this.string.length - 1;
