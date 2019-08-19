@@ -51,10 +51,14 @@ var TAB =             "\t".charCodeAt(0);
 
 var STRING_BUFFER_SIZE = 64 * 1024;
 
-function Parser(options = {}) {
+const testing = {
+  precisionWasLost
+}
+
+function Parser({parseNumbersAsStrings = false} = {}) {
   this.tState = START;
   this.value = undefined;
-  this.parseNumbersAsStrings = options.parseNumbersAsStrings
+  this.parseNumbersAsStrings = parseNumbersAsStrings
 
   this.string = undefined; // string data
   this.stringBuffer = Buffer.alloc ? Buffer.alloc(STRING_BUFFER_SIZE) : new Buffer(STRING_BUFFER_SIZE);
@@ -262,18 +266,16 @@ proto.write = function (buffer) {
             break;
           default:
             this.tState = START;
-            var result = Number(this.string);
-
-            if (isNaN(result)){
+            if (isNaN(this.string)){
               return this.charError(buffer, i);
             }
 
             if (this.parseNumbersAsStrings) {
               this.onToken(STRING, this.string)
             } else {
-              if (result > Number.MAX_SAFE_INTEGER || result < Number.MIN_SAFE_INTEGER || !isFinite(result)) {
-                // Long string of digits which is an ID string and not valid and/or safe JavaScript integer Number
-                this.onError(new Error( `${this.string} is unsafe to parse as a number because it is either too large, too small, or not finite. Please pass the {parseNumbersAsStrings: true} option`));
+              const result = Number(this.string)
+              if (precisionWasLost(this.string, result)) {
+                this.onError(new Error( `${this.string} is unsafe to parse as a number because it is either too large (positive or negative), has too many significant figures, or is not finite when parsed. Please pass in the {parseNumbersAsStrings: true} option`))
               } else {
                 this.onToken(NUMBER, result);
               }
@@ -413,6 +415,34 @@ proto.onToken = function (token, value) {
   }
 };
 
+/**
+ * determines if precision is lost when parsing the JSON representation of a number to a javascript number
+ * @param {string} jsonNumber
+ * @param {number} javascriptNumber
+ * @return {boolean}
+ */
+function precisionWasLost (jsonNumber, javascriptNumber) {
+  return getDigitsSpecifyingPrecision(jsonNumber) !== getDigitsSpecifyingPrecision(JSON.stringify(javascriptNumber))
+}
+
+/**
+ * Takes in a string represention of a number and returns a simplified version of the significand
+ * as a string.
+ *
+ * The simplified significand only contains the digits and we remove any trailing zeros or decimal
+ * information.
+ * @param {string} numberString
+ * @return {string}
+ */
+function getDigitsSpecifyingPrecision(numberString) {
+  return numberString
+    .replace(/\./, '') // drops the dot if it exists
+    .replace(/^-?0?/, '') // drops leading negative sign and and leading 0's if present
+    .replace(/[eE].*$/, '') // drops all exponent information
+    .replace(/0*$/, '') // drops trailing zeros
+}
+
 Parser.C = C;
 
 module.exports = Parser;
+module.exports.testing = testing
