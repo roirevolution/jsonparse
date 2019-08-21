@@ -1,4 +1,6 @@
 /*global Buffer*/
+const precisionWasLost = require('./precisionHelper')
+
 // Named constants with unique integer values
 var C = {};
 // Tokens
@@ -50,10 +52,6 @@ var CARRIAGE_RETURN = "\r".charCodeAt(0);
 var TAB =             "\t".charCodeAt(0);
 
 var STRING_BUFFER_SIZE = 64 * 1024;
-
-const testing = {
-  precisionWasLost
-}
 
 function Parser({parseNumbersAsStrings = false} = {}) {
   this.tState = START;
@@ -275,7 +273,7 @@ proto.write = function (buffer) {
             } else {
               const result = Number(this.string)
               if (precisionWasLost(this.string, result)) {
-                this.onError(new Error( `${this.string} is unsafe to parse as a number because it is either too large (positive or negative), has too many significant figures, or is not finite when parsed. Please pass in the {parseNumbersAsStrings: true} option`))
+                this.onError(new Error(`${this.string} is unsafe to parse as a number because it is either too large (positive or negative), has too many significant figures, or is not finite when parsed. Please pass in the {parseNumbersAsStrings: true} option`))
               } else {
                 this.onToken(NUMBER, result);
               }
@@ -415,34 +413,6 @@ proto.onToken = function (token, value) {
   }
 };
 
-/**
- * determines if precision is lost when parsing the JSON representation of a number to a javascript number
- * @param {string} jsonNumber
- * @param {number} javascriptNumber
- * @return {boolean}
- */
-function precisionWasLost (jsonNumber, javascriptNumber) {
-  return getDigitsSpecifyingPrecision(jsonNumber) !== getDigitsSpecifyingPrecision(JSON.stringify(javascriptNumber))
-}
-
-/**
- * Takes in a string represention of a number and returns a simplified version of the significand
- * as a string.
- *
- * The simplified significand only contains the digits and we remove any trailing zeros or decimal
- * information.
- * @param {string} numberString
- * @return {string}
- */
-function getDigitsSpecifyingPrecision(numberString) {
-  return numberString
-    .replace(/\./, '') // drops the dot if it exists
-    .replace(/^-?0?/, '') // drops leading negative sign and and leading 0's if present
-    .replace(/[eE].*$/, '') // drops all exponent information
-    .replace(/0*$/, '') // drops trailing zeros
-}
-
 Parser.C = C;
 
 module.exports = Parser;
-module.exports.testing = testing

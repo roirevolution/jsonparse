@@ -1,7 +1,6 @@
-var JsonParse = require('../jsonparse');
-var test = require('tape');
+const precisionWasLost = require('../precisionHelper')
+const test = require('tape');
 
-const { precisionWasLost } = JsonParse.testing
 const valuesToTest = [
   {
     jsonNumber: '123908471290347091237490182734091237',
