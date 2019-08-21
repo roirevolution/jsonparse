@@ -19,11 +19,6 @@ const valuesToTest = [
     description: 'precision is lost for an unsafely precise negative integer'
   },
   {
-    jsonNumber: '-123908471290',
-    expected: false,
-    description: 'precision is not lost for a safely precise negative integer'
-  },
-  {
     jsonNumber: '23442.128312312830128391',
     expected: true,
     description: 'precision is lost for an unsafely precise value in decimal notation'
