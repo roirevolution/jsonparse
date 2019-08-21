@@ -29,7 +29,7 @@ const valuesToTest = [
     description: 'precision is lost for an unsafely precise value in floating point notation'
   },
   {
-    jsonNumber: '5.32987e50',
+    jsonNumber: '5.32987e+50',
     expected: false,
     description: 'precision is not lost for a safely precise value in floating point notation with a large exponent'
   },
@@ -47,6 +47,36 @@ const valuesToTest = [
     jsonNumber: '5.98e10000',
     expected: true,
     description: 'precision is lost for a number that is too large (parses to infinity)'
+  },
+  {
+    jsonNumber: '-5.98e10000',
+    expected: true,
+    description: 'precision is lost for a negative number that is too large (parses to -infinity)'
+  },
+  {
+    jsonNumber: '5.98e-10000',
+    expected: true,
+    description: 'precision is lost for a number that is too small'
+  },
+  {
+    jsonNumber: '100000000000000000000000010000',
+    expected: true,
+    description: 'precision is lost for a number that mostly zeros with just 2 ones'
+  },
+  {
+    jsonNumber: `5.2e${Number.MAX_VALUE}123`,
+    expected: true,
+    description: 'precision is lost when the exponent is too large for node to store'
+  },
+  {
+    jsonNumber: `5.2e1000000`,
+    expected: true,
+    description: 'precision is lost when the exponent is over 20 bits'
+  },
+  {
+    jsonNumber: `5.2e09`,
+    expected: false,
+    description: 'precision is not lost for a safely precise number where the exponent starts with a leading 0'
   },
 ]
 
