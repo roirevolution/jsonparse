@@ -26,6 +26,8 @@ test('primitives', function (t) {
     [ [], [ -0.1 ] ],
     [ [ 0 ], 6.02e+10 ],
     [ [], [ 6.02e+10 ] ],
+    [ [ 0 ], 6.02e+26 ],
+    [ [], [ 6.02e+26 ] ],
   ];
 
   var p = new Parser();
@@ -49,8 +51,22 @@ test('primitives', function (t) {
   p.write('[0,1,-1]');
   p.write('[1.0,1.1,-1.1,-1.0][-1][-0.1]');
   p.write('[6.02e10]');
+  p.write('[6.02e26]');
 
   t.end()
+})
+
+test('throws when attempting to parse an unsafely precise number without the parseNumbersAsStrings: true option', t => {
+  try {
+    const p = new Parser()
+
+    p.write('[237123875683460923490127394]')
+    t.fail()
+  } catch(e) {
+    t.assert(e.message.match(/unsafe to parse as a number/))
+
+    t.end()
+  }
 })
 
 test('parses numbers as string when passed parseNumbersAsStrings: true', function (t) {
