@@ -9,11 +9,8 @@ function precisionWasLost (jsonNumber, javascriptNumber) {
 }
 
 /**
- * Takes in a string represention of a number and returns a simplified version of the significand
- * as a string.
- *
- * The simplified significand only contains the digits and we remove any trailing zeros or decimal
- * information. https://en.wikipedia.org/wiki/Significand
+ * Takes in a JSON represention of a number and returns its significand
+ * https://en.wikipedia.org/wiki/Significand
  * @param {string} numberString a string representation of a number following the JSON specification
  * @return {string}
  */
