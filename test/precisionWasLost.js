@@ -63,7 +63,7 @@ const valuesToTest = [
     description: 'precision is lost for a number that mostly zeros with just 2 ones'
   },
   {
-    jsonNumber: `5.2e${Number.MAX_VALUE}123`,
+    jsonNumber: `5.2e${Array(1000).fill('1').join('')}`,
     expected: true,
     description: 'precision is lost when the exponent is too large for node to store'
   },
@@ -81,7 +81,7 @@ const valuesToTest = [
 
 test('precisionWasLost accurately detects loss of precision when a number represented as a string is parsed to a javascript number', t => {
   valuesToTest.forEach(value => {
-    t.assert(precisionWasLost(value.jsonNumber, Number(value.jsonNumber)) === value.expected, value.description)
+    t.strictEqual(precisionWasLost(value.jsonNumber, Number(value.jsonNumber)), value.expected, value.description)
   })
 
   t.end()
